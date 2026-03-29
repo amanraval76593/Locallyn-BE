@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: locallyn-postgres
+    platform: linux/amd64
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: locallyn
+    ports:
+      - "5434:5432"  # host:container — avoids conflict with existing Postgres on 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    container_name: locallyn-redis
+    restart: always
+    ports:
+      - "6381:6379"  # host:container — avoids conflict with existing Redis on 6379
+volumes:
+  postgres_data:
