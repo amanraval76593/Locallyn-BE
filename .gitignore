@@ -1,0 +1,62 @@
+# ========================
+# 🔐 Environment files
+# ========================
+.env
+.env.*
+!.env.example
+
+# ========================
+# 🏗️ Build outputs
+# ========================
+/bin/
+/tmp/
+/build/
+*.exe
+*.out
+*.test
+
+# ========================
+# 🧠 Go specific
+# ========================
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go workspace file
+go.work
+go.work.sum
+
+# ========================
+# 📦 Dependencies (optional)
+# ========================
+# Uncomment if you DON'T want to commit vendor
+# /vendor/
+
+# ========================
+# 🧾 Logs & runtime files
+# ========================
+*.log
+*.pid
+*.seed
+
+# ========================
+# 🧪 Test & coverage
+# ========================
+coverage.out
+*.coverprofile
+
+# ========================
+# 🛠️ IDE / Editor files
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ========================
+# 🔥 Air (hot reload)
+# ========================
+.air.toml
+/tmp/

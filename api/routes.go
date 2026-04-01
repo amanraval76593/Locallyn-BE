@@ -10,4 +10,5 @@ func SetupRoutes(router *gin.Engine) {
 			"status": "ok",
 		})
 	})
+	setUpAuthRoutes(router)
 }
