@@ -3,7 +3,9 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"locallyn-be/internal/common/auth"
+	"log"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -11,12 +13,13 @@ import (
 
 type service struct {
 	repo       Repository
+	cacheRepo  UserCache
 	jwtSecret  string
 	expiryTime int
 }
 
-func NewService(repo Repository, jwtSecret string, expiryTime int) Service {
-	return &service{repo: repo, jwtSecret: jwtSecret, expiryTime: expiryTime}
+func NewService(repo Repository, cacheRepo UserCache, jwtSecret string, expiryTime int) Service {
+	return &service{repo: repo, cacheRepo: cacheRepo, jwtSecret: jwtSecret, expiryTime: expiryTime}
 }
 
 func (s *service) SignUp(ctx context.Context, req SignUpRequest) error {
@@ -39,7 +42,34 @@ func (s *service) SignUp(ctx context.Context, req SignUpRequest) error {
 		PasswordHash: string(hashedPassword),
 	}
 
-	return s.repo.Create(ctx, user)
+	err = s.repo.Create(ctx, user)
+
+	if err != nil {
+		return err
+	}
+	fmt.Printf("userId:%s\n", user.Id)
+	return s.cacheRepo.setVerifyUserCode(user.Id, email)
+}
+
+func (s *service) VerifyUser(ctx context.Context, req VerifyUserRequest) error {
+
+	code := req.Token
+
+	data, err := s.cacheRepo.getVerifyUserData(code)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.VerifyUser(ctx, data.UserId)
+
+	if err != nil {
+		return err
+	}
+	log.Printf("User Data : %s", data)
+
+	return nil
+
 }
 
 func (s *service) Login(ctx context.Context, req LoginRequest) (string, error) {

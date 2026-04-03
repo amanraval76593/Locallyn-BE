@@ -27,6 +27,21 @@ func (r *repository) Create(ctx context.Context, user *User) error {
 	return err
 }
 
+func (r *repository) VerifyUser(ctx context.Context, userId string) error {
+	query := `
+			UPDATE users
+			SET is_verified=$1
+			WHERE id=$2
+	`
+
+	_, err := database.DB.Exec(ctx, query,
+		true,
+		userId,
+	)
+
+	return err
+}
+
 func (r *repository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
 		SELECT * 

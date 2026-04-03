@@ -4,7 +4,7 @@ import (
 	"locallyn-be/api"
 	"locallyn-be/config"
 	"locallyn-be/pkg/database"
-	"locallyn-be/pkg/redis"
+	"locallyn-be/pkg/redisConfig"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,7 @@ func main() {
 
 	database.InitPostgres(cfg.PostgresURL)
 
-	redis.InitRedis(cfg.RedisAddr)
+	redisConfig.InitRedis(cfg.RedisAddr)
 
 	router := gin.Default()
 

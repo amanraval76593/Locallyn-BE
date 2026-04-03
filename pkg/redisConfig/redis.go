@@ -1,4 +1,4 @@
-package redis
+package redisConfig
 
 import (
 	"context"
@@ -7,16 +7,16 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var redisClient *redis.Client
+var RedisClient *redis.Client
 
 func InitRedis(redisAdd string) {
-	redisClient = redis.NewClient(
+	RedisClient = redis.NewClient(
 		&redis.Options{
 			Addr: redisAdd,
 		},
 	)
 
-	_, err := redisClient.Ping(context.Background()).Result()
+	_, err := RedisClient.Ping(context.Background()).Result()
 
 	if err != nil {
 		log.Fatalf("Error initialization redis : %v", err)

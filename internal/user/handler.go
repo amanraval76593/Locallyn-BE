@@ -37,6 +37,30 @@ func (h *Handler) SignUp(c *gin.Context) {
 		Message: "User Created Successfully",
 	})
 }
+func (h *Handler) VerifyUser(c *gin.Context) {
+	var req VerifyUserRequest
+
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err := h.service.VerifyUser(c.Request.Context(), req)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, verifyUserResponse{
+		Message: "User Verified Successfully",
+	})
+
+}
 
 func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
@@ -45,6 +69,7 @@ func (h *Handler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	token, err := h.service.Login(c.Request.Context(), req)
@@ -53,6 +78,7 @@ func (h *Handler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	c.JSON(200, LoginResponse{
