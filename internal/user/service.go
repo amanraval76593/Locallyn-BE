@@ -101,3 +101,16 @@ func (s *service) Login(ctx context.Context, req LoginRequest) (string, error) {
 	return token, nil
 
 }
+
+func (s *service) CreateProfile(ctx context.Context, claims *auth.Claims, req CreateProfileRequest) (*UserProfile, error) {
+	if claims == nil || claims.UserId == "" {
+		return nil, errors.New("invalid authenticated user")
+	}
+
+	profile, err := s.repo.CreateUserProfile(ctx, claims.UserId, req.Username, req.DisplayName)
+	if err != nil {
+		return nil, err
+	}
+
+	return profile, nil
+}

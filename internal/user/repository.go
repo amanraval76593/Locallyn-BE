@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"locallyn-be/pkg/database"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type repository struct{}
@@ -63,4 +65,53 @@ func (r *repository) FindByEmail(ctx context.Context, email string) (*User, erro
 	}
 
 	return &user, nil
+}
+
+func (r *repository) CreateUserProfile(ctx context.Context, userId string, userName string, displayName string) (*UserProfile, error) {
+	query := `
+		INSERT INTO user_profiles(user_id, username, display_name)
+		VALUES ($1, $2, $3)
+		RETURNING
+			user_id,
+			username,
+			display_name,
+			avatar_url,
+			trust_score,
+			total_posts,
+			total_confirmations,
+			total_reports,
+			created_at,
+			updated_at
+		`
+
+	var profile UserProfile
+
+	err := database.DB.QueryRow(ctx, query, userId, userName, displayName).Scan(
+		&profile.UserId,
+		&profile.Username,
+		&profile.DisplayName,
+		&profile.AvatarURL,
+		&profile.TrustScore,
+		&profile.TotalPosts,
+		&profile.TotalConfirmations,
+		&profile.TotalReports,
+		&profile.CreatedAt,
+		&profile.UpdatedAt,
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			switch pgErr.ConstraintName {
+			case "user_profiles_username_key":
+				return nil, ErrUsernameAlreadyExists
+			case "user_profiles_pkey":
+				return nil, ErrUserProfileExists
+			}
+		}
+
+		return nil, err
+	}
+
+	return &profile, nil
 }
