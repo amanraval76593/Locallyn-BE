@@ -3,6 +3,7 @@ package api
 import (
 	"locallyn-be/config"
 	"locallyn-be/internal/cache"
+	commonauth "locallyn-be/internal/common/auth"
 	"locallyn-be/internal/user"
 
 	"github.com/gin-gonic/gin"
@@ -21,5 +22,6 @@ func setUpAuthRoutes(router *gin.Engine) {
 		auth.POST("/signup", userHandler.SignUp)
 		auth.POST("/verify-user", userHandler.VerifyUser)
 		auth.POST("/login", userHandler.Login)
+		auth.POST("/create-profile", commonauth.RequireAuth(cfg.JwtSecret), userHandler.CreateProfile)
 	}
 }

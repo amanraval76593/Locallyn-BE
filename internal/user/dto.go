@@ -24,3 +24,12 @@ type LoginRequest struct {
 type LoginResponse struct {
 	AccessToken string `json:"accessToken"`
 }
+
+type CreateProfileRequest struct {
+	Username    string `json:"userName" binding:"required,min=4"`
+	DisplayName string `json:"displayName" binding:"required,min=4"`
+}
+
+type CreateProfileResponse struct {
+	Message string `json:"message"`
+}

@@ -9,3 +9,16 @@ type User struct {
 	IsVerified   bool
 	CreatedAt    time.Time
 }
+
+type UserProfile struct {
+	UserId             string
+	Username           string
+	DisplayName        string
+	AvatarURL          *string
+	TrustScore         float64
+	TotalPosts         int
+	TotalConfirmations int
+	TotalReports       int
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+}

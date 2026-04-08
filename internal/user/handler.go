@@ -1,7 +1,10 @@
 package user
 
 import (
+	"errors"
 	"net/http"
+
+	"locallyn-be/internal/common/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -85,4 +88,42 @@ func (h *Handler) Login(c *gin.Context) {
 		AccessToken: token,
 	})
 
+}
+
+func (h *Handler) CreateProfile(c *gin.Context) {
+	var req CreateProfileRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	claims, err := auth.GetClaimsFromContext(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	_, err = h.service.CreateProfile(c.Request.Context(), claims, req)
+	if err != nil {
+		if errors.Is(err, ErrUsernameAlreadyExists) || errors.Is(err, ErrUserProfileExists) {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, CreateProfileResponse{
+		Message: "Profile Created Successfully",
+	})
 }
