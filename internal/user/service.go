@@ -102,12 +102,65 @@ func (s *service) Login(ctx context.Context, req LoginRequest) (string, error) {
 
 }
 
-func (s *service) CreateProfile(ctx context.Context, claims *auth.Claims, req CreateProfileRequest) (*UserProfile, error) {
+func (s *service) CreateProfile(ctx context.Context, claims *auth.Claims, req CreateProfileRequest) error {
+	if claims == nil || claims.UserId == "" {
+		return errors.New("invalid authenticated user")
+	}
+
+	err := s.repo.CreateUserProfile(ctx, claims.UserId, req.Username, req.DisplayName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *service) GetProfile(ctx context.Context, claims *auth.Claims, req GetProfileRequest) (*UserProfile, error) {
 	if claims == nil || claims.UserId == "" {
 		return nil, errors.New("invalid authenticated user")
 	}
 
-	profile, err := s.repo.CreateUserProfile(ctx, claims.UserId, req.Username, req.DisplayName)
+	profile, err := s.repo.GetUserProfile(ctx, req.UserName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return profile, nil
+
+}
+
+func (s *service) UpdateProfile(ctx context.Context, claims *auth.Claims, req UpdateProfileRequest) (*UserProfile, error) {
+	if claims == nil || claims.UserId == "" {
+		return nil, errors.New("invalid authenticated user")
+	}
+
+	if req.Username == nil && req.DisplayName == nil && req.AvatarURL == nil {
+		return nil, ErrNoProfileFieldsToEdit
+	}
+
+	if req.Username != nil {
+		username := strings.TrimSpace(*req.Username)
+		if len(username) < 4 {
+			return nil, ErrInvalidProfileInput
+		}
+		req.Username = &username
+	}
+
+	if req.DisplayName != nil {
+		displayName := strings.TrimSpace(*req.DisplayName)
+		if len(displayName) < 4 {
+			return nil, ErrInvalidProfileInput
+		}
+		req.DisplayName = &displayName
+	}
+
+	if req.AvatarURL != nil {
+		avatarURL := strings.TrimSpace(*req.AvatarURL)
+		req.AvatarURL = &avatarURL
+	}
+
+	profile, err := s.repo.UpdateUserProfile(ctx, claims.UserId, req)
 	if err != nil {
 		return nil, err
 	}
