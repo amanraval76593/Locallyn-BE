@@ -23,5 +23,7 @@ func setUpAuthRoutes(router *gin.Engine) {
 		auth.POST("/verify-user", userHandler.VerifyUser)
 		auth.POST("/login", userHandler.Login)
 		auth.POST("/create-profile", commonauth.RequireAuth(cfg.JwtSecret), userHandler.CreateProfile)
+		auth.PATCH("/update-profile", commonauth.RequireAuth(cfg.JwtSecret), userHandler.UpdateProfile)
+		auth.GET("/get-profile", commonauth.RequireAuth(cfg.JwtSecret), userHandler.GetProfile)
 	}
 }

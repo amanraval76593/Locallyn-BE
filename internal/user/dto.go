@@ -33,3 +33,21 @@ type CreateProfileRequest struct {
 type CreateProfileResponse struct {
 	Message string `json:"message"`
 }
+
+type GetProfileRequest struct {
+	UserName string `form:"userName" binding:"required,min=4"`
+}
+
+type GetProfileResponse struct {
+	UserProfileData UserProfile `json:"userProfileData"`
+}
+
+type UpdateProfileRequest struct {
+	Username    *string `json:"userName,omitempty"`
+	DisplayName *string `json:"displayName,omitempty"`
+	AvatarURL   *string `json:"avatarUrl,omitempty"`
+}
+
+type UpdateProfileResponse struct {
+	UserProfileData UserProfile `json:"userProfileData"`
+}

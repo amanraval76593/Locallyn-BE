@@ -11,4 +11,5 @@ func SetupRoutes(router *gin.Engine) {
 		})
 	})
 	setUpAuthRoutes(router)
+	setUpIncidentRoute(router)
 }
