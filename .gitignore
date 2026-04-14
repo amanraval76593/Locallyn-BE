@@ -60,3 +60,4 @@ coverage.out
 # ========================
 .air.toml
 /tmp/
+.gocache

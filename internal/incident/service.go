@@ -1,6 +1,9 @@
 package incident
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type service struct {
 	repo Repository
@@ -29,4 +32,33 @@ func (s *service) GetIncidentService(ctx context.Context, req GetIncidentRequest
 	}
 
 	return incident, nil
+}
+
+func (s *service) FindOrCreateIncidentServixe(ctx context.Context, latitude float64, longitude float64, radius int, category string) (*Incident, error) {
+	incident, err := s.repo.FindNearbyIncidentByCategory(ctx, latitude, longitude, radius, category)
+
+	if err != nil {
+		return s.CreateIncidentService(ctx, latitude, longitude, radius, category)
+	}
+
+	if incident != nil {
+		return incident, nil
+	}
+
+	return s.CreateIncidentService(ctx, latitude, longitude, radius, category)
+}
+
+func (s *service) CreateIncidentService(ctx context.Context, latitude float64, longitude float64, radius int, category string) (*Incident, error) {
+	incident := &Incident{
+		Location: fmt.Sprintf("POINT(%f %f)", longitude, latitude),
+		Title:    category,
+		Category: category,
+	}
+
+	createdIncident, err := s.repo.InsertIncident(ctx, incident)
+	if err != nil {
+		return nil, err
+	}
+
+	return createdIncident, nil
 }
