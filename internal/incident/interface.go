@@ -12,6 +12,6 @@ type Repository interface {
 type Service interface {
 	GetNearbyIncidentService(ctx context.Context, req GetNearbyIncidentRequest) ([]Incident, error)
 	GetIncidentService(ctx context.Context, req GetIncidentRequest) (*Incident, error)
-	FindOrCreateIncidentServixe(ctx context.Context, latitude float64, longitude float64, radius int, category string) (*Incident, error)
+	FindOrCreateIncidentService(ctx context.Context, latitude float64, longitude float64, radius int, category string) (*Incident, error)
 	CreateIncidentService(ctx context.Context, latitude float64, longitude float64, radius int, category string) (*Incident, error)
 }

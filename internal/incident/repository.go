@@ -117,22 +117,35 @@ func (r *repository) GetIncident(ctx context.Context, id string) (*Incident, err
 
 func (r *repository) FindNearbyIncidentByCategory(ctx context.Context, latitude float64, longitude float64, radius int, category string) (*Incident, error) {
 	query := `
-		SELECT *
+		SELECT
+			id,
+			title,
+			category,
+			post_count,
+			confirmation_count,
+			trust_score,
+			created_at,
+			updated_at,
+			expires_at,
+			ST_AsText(location) as location
 		FROM incidents
 		WHERE ST_DWithin(
 			location,
-			ST_MakePoint($1, $2)::geography,
+			ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
 			$3
 		)
 		AND category = $4
 		AND (expires_at IS NULL OR expires_at > NOW())
-		ORDER BY ST_Distance(location, ST_MakePoint($1, $2)::geography)
+		ORDER BY ST_Distance(
+			location,
+			ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
+		)
 		LIMIT 1;
 	`
 
 	var incident Incident
 
-	err := database.DB.QueryRow(ctx, query, latitude, longitude, radius, category).Scan(
+	err := database.DB.QueryRow(ctx, query, longitude, latitude, radius, category).Scan(
 		&incident.ID,
 		&incident.Title,
 		&incident.Category,
