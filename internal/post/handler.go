@@ -48,3 +48,36 @@ func (h *Handler) CreatePostHandler(c *gin.Context) {
 	})
 
 }
+
+func (h *Handler) FetchPostByIdHandler(c *gin.Context) {
+
+	var req FetchPostByIdRequest
+
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	_, err := auth.GetClaimsFromContext(c.Request.Context())
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	post, err := h.service.FetchPostByIdService(c.Request.Context(), req)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(200, FetchPostByIdResponse{
+		Post: *post,
+	})
+}

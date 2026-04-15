@@ -81,3 +81,19 @@ func (s *service) CreatePostService(ctx context.Context, claims *auth.Claims, re
 	}
 	return newPost, nil
 }
+
+func (s *service) FetchPostByIdService(ctx context.Context, req FetchPostByIdRequest) (*Post, error) {
+	postID, err := uuid.Parse(req.PostId)
+	if err != nil {
+		return nil, errors.New("invalid post ID format")
+	}
+
+	post, err := s.repo.FetchPostById(ctx, &postID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return post, nil
+
+}

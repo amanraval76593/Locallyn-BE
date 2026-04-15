@@ -15,3 +15,11 @@ type CreatePostRequest struct {
 type CreatePostResponse struct {
 	Post Post `json:"post"`
 }
+
+type FetchPostByIdRequest struct {
+	PostId string `form:"postId" binding:"required,uuid"`
+}
+
+type FetchPostByIdResponse struct {
+	Post Post `json:"post"`
+}

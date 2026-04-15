@@ -119,3 +119,50 @@ func (r *repository) UpdateIncidentPostCount(ctx context.Context, incidentId *uu
 
 	return err
 }
+
+func (r *repository) FetchPostById(ctx context.Context, postId *uuid.UUID) (*Post, error) {
+	query := `
+		SELECT
+			id,
+			user_id,
+			incident_id,
+			content,
+			ST_AsText(location) as location,
+			radius,
+			identity_type,
+			post_type,
+			trust_score,
+			media_urls,
+			created_at,
+			expires_at,
+			is_deleted,
+			is_flagged
+		FROM posts
+		WHERE id=$1
+	`
+
+	var post Post
+
+	err := database.DB.QueryRow(ctx, query, postId).Scan(
+		&post.ID,
+		&post.UserID,
+		&post.IncidentID,
+		&post.Content,
+		&post.Location,
+		&post.Radius,
+		&post.IdentityType,
+		&post.PostType,
+		&post.TrustScore,
+		&post.MediaURLs,
+		&post.CreatedAt,
+		&post.ExpiresAt,
+		&post.IsDeleted,
+		&post.IsFlagged,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}

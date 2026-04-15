@@ -17,9 +17,11 @@ func setUpPostRoutes(router *gin.Engine) {
 	postService := post.NewService(postRepo, incidentService)
 	postHandler := post.NewHandler(postService)
 
-	auth := router.Group("/post")
+	postRouter := router.Group("/post")
 	{
-		auth.POST("/create-post", commonauth.RequireAuth(cfg.JwtSecret), postHandler.CreatePostHandler)
+		postRouter.POST("/create-post", commonauth.RequireAuth(cfg.JwtSecret), postHandler.CreatePostHandler)
+		postRouter.GET("/fetch-post", commonauth.RequireAuth(cfg.JwtSecret), postHandler.FetchPostByIdHandler)
+
 	}
 
 }
