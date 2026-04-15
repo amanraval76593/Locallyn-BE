@@ -49,7 +49,12 @@ func (r *repository) VerifyUser(ctx context.Context, userId string) error {
 
 func (r *repository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT * 
+		SELECT
+			id,
+			email,
+			password_hash,
+			is_verified,
+			created_at
 		FROM users
 		WHERE email=$1
 	`

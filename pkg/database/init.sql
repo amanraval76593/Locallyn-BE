@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS incidents(
     title TEXT,
     category VARCHAR(50),
 
-    post_count INT DEFAULT 1,
+    post_count INT DEFAULT 0,
     confirmation_count INT DEFAULT 0,
     trust_score FLOAT DEFAULT 0.5,
 
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS posts(
     media_urls TEXT[],
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    expires_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '7 days'),
 
     is_deleted BOOLEAN DEFAULT FALSE,
     is_flagged BOOLEAN DEFAULT FALSE,
