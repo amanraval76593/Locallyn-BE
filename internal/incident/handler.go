@@ -66,7 +66,7 @@ func (h *Handler) GetIncidentHandler(c *gin.Context) {
 		})
 	}
 
-	incident, err := h.service.GetIncidentService(c.Request.Context(), req)
+	response, err := h.service.GetIncidentService(c.Request.Context(), req)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -74,8 +74,6 @@ func (h *Handler) GetIncidentHandler(c *gin.Context) {
 		})
 	}
 
-	c.JSON(200, GetIncidentResponse{
-		Incident: *incident,
-	})
+	c.JSON(200, response)
 
 }

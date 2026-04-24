@@ -37,7 +37,7 @@ func (r *repository) GetNearbyIncidents(ctx context.Context, latitude float64, l
         )
     `
 
-	rows, err := database.DB.Query(ctx, query, longitude, latitude, radius)
+	rows, err := database.Conn(ctx).Query(ctx, query, longitude, latitude, radius)
 
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (r *repository) GetIncident(ctx context.Context, id string) (*Incident, err
 
 	var incident Incident
 
-	err := database.DB.QueryRow(ctx, query, id).Scan(
+	err := database.Conn(ctx).QueryRow(ctx, query, id).Scan(
 		&incident.ID,
 		&incident.Title,
 		&incident.Category,
@@ -113,6 +113,49 @@ func (r *repository) GetIncident(ctx context.Context, id string) (*Incident, err
 	}
 
 	return &incident, nil
+}
+
+func (r *repository) GetIncidentConfirmations(ctx context.Context, id string) ([]IncidentConfirmation, error) {
+	query := `
+		SELECT
+			id,
+			incident_id,
+			user_id,
+			created_at
+		FROM incident_confirmations
+		WHERE incident_id = $1
+		ORDER BY created_at DESC
+	`
+
+	rows, err := database.Conn(ctx).Query(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	confirmations := make([]IncidentConfirmation, 0)
+
+	for rows.Next() {
+		var confirmation IncidentConfirmation
+
+		err := rows.Scan(
+			&confirmation.ID,
+			&confirmation.IncidentID,
+			&confirmation.UserID,
+			&confirmation.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		confirmations = append(confirmations, confirmation)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return confirmations, nil
 }
 
 func (r *repository) FindNearbyIncidentByCategory(ctx context.Context, latitude float64, longitude float64, radius int, category string) (*Incident, error) {
@@ -145,7 +188,7 @@ func (r *repository) FindNearbyIncidentByCategory(ctx context.Context, latitude 
 
 	var incident Incident
 
-	err := database.DB.QueryRow(ctx, query, longitude, latitude, radius, category).Scan(
+	err := database.Conn(ctx).QueryRow(ctx, query, longitude, latitude, radius, category).Scan(
 		&incident.ID,
 		&incident.Title,
 		&incident.Category,
@@ -194,7 +237,7 @@ func (r *repository) InsertIncident(ctx context.Context, incident *Incident) (*I
 
 	var created Incident
 
-	err := database.DB.QueryRow(
+	err := database.Conn(ctx).QueryRow(
 		ctx,
 		query,
 		incident.Location,

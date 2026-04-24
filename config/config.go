@@ -22,7 +22,7 @@ func LoadConfig() *Config {
 		log.Println("No .env file found")
 	}
 
-	expiry, _ := strconv.Atoi(getEnv("ACCESS_TOKEN_EXPIRY", "15"))
+	expiry, _ := strconv.Atoi(getEnv("ACCESS_TOKEN_EXPIRY", "60"))
 	return &Config{
 		PostgresURL:       getEnv("POSTGRES_URL", "postgres://postgres:postgres@localhost:5432/locallyn"),
 		RedisAddr:         getEnv("REDIS_ADDR", "localhost:6379"),

@@ -15,5 +15,6 @@ type GetIncidentRequest struct {
 }
 
 type GetIncidentResponse struct {
-	Incident Incident `json:"incident"`
+	Incident      Incident               `json:"incident"`
+	Confirmations []IncidentConfirmation `json:"confirmations"`
 }

@@ -53,7 +53,7 @@ func (h *Handler) FetchPostByIdHandler(c *gin.Context) {
 
 	var req FetchPostByIdRequest
 
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := c.ShouldBindUri(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -69,7 +69,7 @@ func (h *Handler) FetchPostByIdHandler(c *gin.Context) {
 		return
 	}
 
-	post, err := h.service.FetchPostByIdService(c.Request.Context(), req)
+	response, err := h.service.FetchPostByIdService(c.Request.Context(), req)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -77,7 +77,5 @@ func (h *Handler) FetchPostByIdHandler(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(200, FetchPostByIdResponse{
-		Post: *post,
-	})
+	c.JSON(200, response)
 }
