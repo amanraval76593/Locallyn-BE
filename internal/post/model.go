@@ -23,3 +23,11 @@ type Post struct {
 	IsDeleted    bool                   `db:"is_deleted"`
 	IsFlagged    bool                   `db:"is_flagged"`
 }
+
+type PostFeedback struct {
+	ID           uuid.UUID              `db:"id" json:"id"`
+	PostID       uuid.UUID              `db:"post_id" json:"post_id"`
+	UserID       uuid.UUID              `db:"user_id" json:"user_id"`
+	FeedbackType constants.FeedbackType `db:"feedback_type" json:"feedback_type"`
+	CreatedAt    time.Time              `db:"created_at" json:"created_at"`
+}

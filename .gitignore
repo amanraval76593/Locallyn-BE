@@ -11,6 +11,7 @@
 /bin/
 /tmp/
 /build/
+cmd/server/__debug_bin*
 *.exe
 *.out
 *.test

@@ -17,9 +17,10 @@ type CreatePostResponse struct {
 }
 
 type FetchPostByIdRequest struct {
-	PostId string `form:"postId" binding:"required,uuid"`
+	PostId string `uri:"postId" binding:"required,uuid"`
 }
 
 type FetchPostByIdResponse struct {
-	Post Post `json:"post"`
+	Post      Post           `json:"post"`
+	Feedbacks []PostFeedback `json:"feedbacks"`
 }

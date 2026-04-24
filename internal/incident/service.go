@@ -27,14 +27,22 @@ func (s *service) GetNearbyIncidentService(ctx context.Context, req GetNearbyInc
 	return incidents, nil
 }
 
-func (s *service) GetIncidentService(ctx context.Context, req GetIncidentRequest) (*Incident, error) {
+func (s *service) GetIncidentService(ctx context.Context, req GetIncidentRequest) (*GetIncidentResponse, error) {
 	incident, err := s.repo.GetIncident(ctx, req.Id)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return incident, nil
+	confirmations, err := s.repo.GetIncidentConfirmations(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetIncidentResponse{
+		Incident:      *incident,
+		Confirmations: confirmations,
+	}, nil
 }
 
 func (s *service) FindOrCreateIncidentService(ctx context.Context, latitude float64, longitude float64, radius int, category string) (*Incident, error) {

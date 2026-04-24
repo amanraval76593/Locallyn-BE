@@ -18,3 +18,10 @@ type Incident struct {
 	UpdatedAt         time.Time  `db:"updated_at"`
 	ExpiresAt         *time.Time `db:"expires_at"`
 }
+
+type IncidentConfirmation struct {
+	ID         uuid.UUID `db:"id" json:"id"`
+	IncidentID uuid.UUID `db:"incident_id" json:"incident_id"`
+	UserID     uuid.UUID `db:"user_id" json:"user_id"`
+	CreatedAt  time.Time `db:"created_at" json:"created_at"`
+}

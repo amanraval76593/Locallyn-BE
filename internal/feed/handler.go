@@ -1,4 +1,4 @@
-package post
+package feed
 
 import (
 	"locallyn-be/internal/common/auth"
@@ -15,27 +15,24 @@ func NewHandler(service Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) CreatePostHandler(c *gin.Context) {
-	var req CreatePostRequest
+func (h *Handler) GetFeedByLocationHandler(c *gin.Context) {
+	var req GetFeedByLocationRequest
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindQuery(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	claims, err := auth.GetClaimsFromContext(c.Request.Context())
-
-	if err != nil {
+	if _, err := auth.GetClaimsFromContext(c.Request.Context()); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	post, err := h.service.CreatePostService(c.Request.Context(), claims, req)
-
+	response, err := h.service.GetFeedByLocationService(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -43,15 +40,11 @@ func (h *Handler) CreatePostHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, CreatePostResponse{
-		Post: *post,
-	})
-
+	c.JSON(http.StatusOK, response)
 }
 
-func (h *Handler) FetchPostByIdHandler(c *gin.Context) {
-
-	var req FetchPostByIdRequest
+func (h *Handler) GetIncidentPostsHandler(c *gin.Context) {
+	var req GetIncidentPostsRequest
 
 	if err := c.ShouldBindUri(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -60,22 +53,20 @@ func (h *Handler) FetchPostByIdHandler(c *gin.Context) {
 		return
 	}
 
-	_, err := auth.GetClaimsFromContext(c.Request.Context())
-
-	if err != nil {
+	if _, err := auth.GetClaimsFromContext(c.Request.Context()); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	response, err := h.service.FetchPostByIdService(c.Request.Context(), req)
-
+	response, err := h.service.GetIncidentPostsService(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
-	c.JSON(200, response)
+
+	c.JSON(http.StatusOK, response)
 }

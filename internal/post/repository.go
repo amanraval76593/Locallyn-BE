@@ -61,7 +61,7 @@ func (r *repository) CreatePost(ctx context.Context, post *Post) (*Post, error) 
 
 	var created Post
 
-	err := database.DB.QueryRow(
+	err := database.Conn(ctx).QueryRow(
 		ctx,
 		query,
 		post.UserID,
@@ -103,7 +103,7 @@ func (r *repository) UpdateUserPostCount(ctx context.Context, userId *uuid.UUID)
 	SET total_posts=total_posts+1
 	WHERE user_id=$1
 	`
-	_, err := database.DB.Exec(ctx, query, userId.String())
+	_, err := database.Conn(ctx).Exec(ctx, query, userId.String())
 
 	return err
 }
@@ -115,7 +115,7 @@ func (r *repository) UpdateIncidentPostCount(ctx context.Context, incidentId *uu
 	WHERE id=$1
 	`
 
-	_, err := database.DB.Exec(ctx, query, incidentId.String())
+	_, err := database.Conn(ctx).Exec(ctx, query, incidentId.String())
 
 	return err
 }
@@ -143,7 +143,7 @@ func (r *repository) FetchPostById(ctx context.Context, postId *uuid.UUID) (*Pos
 
 	var post Post
 
-	err := database.DB.QueryRow(ctx, query, postId).Scan(
+	err := database.Conn(ctx).QueryRow(ctx, query, postId).Scan(
 		&post.ID,
 		&post.UserID,
 		&post.IncidentID,
@@ -165,4 +165,49 @@ func (r *repository) FetchPostById(ctx context.Context, postId *uuid.UUID) (*Pos
 	}
 
 	return &post, nil
+}
+
+func (r *repository) FetchPostFeedbacks(ctx context.Context, postId *uuid.UUID) ([]PostFeedback, error) {
+	query := `
+		SELECT
+			id,
+			post_id,
+			user_id,
+			feedback_type,
+			created_at
+		FROM post_feedback
+		WHERE post_id = $1
+		ORDER BY created_at DESC
+	`
+
+	rows, err := database.Conn(ctx).Query(ctx, query, postId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	feedbacks := make([]PostFeedback, 0)
+
+	for rows.Next() {
+		var feedback PostFeedback
+
+		err := rows.Scan(
+			&feedback.ID,
+			&feedback.PostID,
+			&feedback.UserID,
+			&feedback.FeedbackType,
+			&feedback.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		feedbacks = append(feedbacks, feedback)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return feedbacks, nil
 }

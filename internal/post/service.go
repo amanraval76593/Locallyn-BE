@@ -7,6 +7,7 @@ import (
 	"locallyn-be/internal/common/auth"
 	"locallyn-be/internal/common/constants"
 	"locallyn-be/internal/incident"
+	"locallyn-be/pkg/database"
 
 	"github.com/google/uuid"
 )
@@ -29,60 +30,69 @@ func (s *service) CreatePostService(ctx context.Context, claims *auth.Claims, re
 		return nil, errors.New("invalid authenticated user")
 	}
 
-	var incidentID *uuid.UUID
-
-	if req.Type == constants.PostTypeIncident {
-		incidentRecord, err := s.incidentService.FindOrCreateIncidentService(
-			ctx,
-			req.Latitude,
-			req.Longitude,
-			2000,
-			req.Category,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		incidentID = &incidentRecord.ID
-	}
-
 	userID, err := uuid.Parse(claims.UserId)
 	if err != nil {
 		return nil, errors.New("invalid user ID format")
 	}
 
-	post := &Post{
-		UserID:       &userID,
-		IncidentID:   incidentID,
-		Content:      req.Content,
-		Location:     fmt.Sprintf("POINT(%f %f)", req.Longitude, req.Latitude),
-		Radius:       2000,
-		IdentityType: req.Identity,
-		PostType:     req.Type,
-		MediaURLs:    req.MediaURLs,
-	}
+	var newPost *Post
+	var incidentID *uuid.UUID
 
-	newPost, err := s.repo.CreatePost(ctx, post)
+	err = database.WithTransaction(ctx, func(txCtx context.Context) error {
+		if req.Type == constants.PostTypeIncident {
+			incidentRecord, err := s.incidentService.FindOrCreateIncidentService(
+				txCtx,
+				req.Latitude,
+				req.Longitude,
+				2000,
+				req.Category,
+			)
+			if err != nil {
+				return err
+			}
 
-	if err != nil {
-		return nil, err
-	}
-	if incidentID != nil {
-		err := s.repo.UpdateIncidentPostCount(ctx, incidentID)
-
-		if err != nil {
-			return nil, err
+			incidentID = &incidentRecord.ID
 		}
-	}
-	err = s.repo.UpdateUserPostCount(ctx, &userID)
 
+		post := &Post{
+			UserID:       &userID,
+			IncidentID:   incidentID,
+			Content:      req.Content,
+			Location:     fmt.Sprintf("POINT(%f %f)", req.Longitude, req.Latitude),
+			Radius:       2000,
+			IdentityType: req.Identity,
+			PostType:     req.Type,
+			MediaURLs:    req.MediaURLs,
+		}
+
+		createdPost, err := s.repo.CreatePost(txCtx, post)
+		if err != nil {
+			return err
+		}
+		postId := createdPost.ID.String()
+		fmt.Println(postId)
+		if incidentID != nil {
+			if err := s.repo.UpdateIncidentPostCount(txCtx, incidentID); err != nil {
+				return err
+			}
+		}
+
+		if err := s.repo.UpdateUserPostCount(txCtx, &userID); err != nil {
+			return err
+		}
+
+		newPost = createdPost
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
+
 	return newPost, nil
 }
 
-func (s *service) FetchPostByIdService(ctx context.Context, req FetchPostByIdRequest) (*Post, error) {
+func (s *service) FetchPostByIdService(ctx context.Context, req FetchPostByIdRequest) (*FetchPostByIdResponse, error) {
 	postID, err := uuid.Parse(req.PostId)
 	if err != nil {
 		return nil, errors.New("invalid post ID format")
@@ -94,6 +104,14 @@ func (s *service) FetchPostByIdService(ctx context.Context, req FetchPostByIdReq
 		return nil, err
 	}
 
-	return post, nil
+	feedbacks, err := s.repo.FetchPostFeedbacks(ctx, &postID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FetchPostByIdResponse{
+		Post:      *post,
+		Feedbacks: feedbacks,
+	}, nil
 
 }
