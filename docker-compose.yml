@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: locallyn
     ports:
-      - "5434:5432"  # host:container — avoids conflict with existing Postgres on 5432
+      - "5434:5432" 
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./pkg/database/init.sql:/docker-entrypoint-initdb.d/init.sql  
@@ -18,6 +18,6 @@ services:
     container_name: locallyn-redis
     restart: always
     ports:
-      - "6381:6379"  # host:container — avoids conflict with existing Redis on 6379
+      - "6381:6379"  
 volumes:
   postgres_data:

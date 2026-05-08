@@ -2,7 +2,10 @@ package incident
 
 import (
 	"context"
+	"errors"
 	"locallyn-be/pkg/database"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type repository struct{}
@@ -40,6 +43,9 @@ func (r *repository) GetNearbyIncidents(ctx context.Context, latitude float64, l
 	rows, err := database.Conn(ctx).Query(ctx, query, longitude, latitude, radius)
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -202,6 +208,9 @@ func (r *repository) FindNearbyIncidentByCategory(ctx context.Context, latitude 
 	)
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

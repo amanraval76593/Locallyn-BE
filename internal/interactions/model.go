@@ -14,3 +14,11 @@ type PostFeedback struct {
 	FeedbackType constants.FeedbackType `db:"feedback_type"`
 	CreatedAt    time.Time              `db:"created_at"`
 }
+
+type PostReport struct {
+	ID        uuid.UUID `db:"id"`
+	PostId    uuid.UUID `db:"post_id"`
+	UserId    uuid.UUID `db:"user_id"`
+	Reason    string    `db:"reason"`
+	CreatedAt time.Time `db:"created_at"`
+}

@@ -112,3 +112,44 @@ func (h *Handler) PostFeedbackHandler(c *gin.Context) {
 		Message: "Feedback submitted",
 	})
 }
+
+func (h *Handler) ReportPost(c *gin.Context) {
+	var req PostReportRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	claims, err := auth.GetClaimsFromContext(c.Request.Context())
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	postReport, err := h.service.PostReportService(c.Request.Context(), req, claims)
+
+	if err != nil {
+		status := http.StatusInternalServerError
+		switch {
+		case errors.Is(err, ErrOwnPostReport):
+			status = http.StatusBadRequest
+		case errors.Is(err, ErrPostNotFound):
+			status = http.StatusNotFound
+		}
+
+		c.JSON(status, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, PostReportResponse{
+		Report: *postReport,
+	})
+}
