@@ -15,6 +15,7 @@ var (
 	ErrAlreadyConfirmed    = errors.New("incident already confirmed by user")
 	ErrAlreadyGaveFeedback = errors.New("feedback already submitted for this post")
 	ErrOwnPostFeedback     = errors.New("you cannot give feedback to your own post")
+	ErrOwnPostReport       = errors.New("you cannot report your own post")
 )
 
 type service struct {
@@ -84,5 +85,60 @@ func (s *service) PostFeedbackService(ctx context.Context, req PostFeedbackReque
 		return ErrOwnPostFeedback
 	}
 
-	return s.repo.CreatePostFeedback(ctx, postID, userID, req.Feedback)
+	return database.WithTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.repo.CreatePostFeedback(txCtx, postID, userID, req.Feedback); err != nil {
+			return err
+		}
+
+		if err := s.repo.UpdatePostTrustScore(txCtx, postID); err != nil {
+			return err
+		}
+
+		return s.repo.UpdateUserTrustScore(txCtx, *ownerID)
+	})
+}
+
+func (s *service) PostReportService(ctx context.Context, req PostReportRequest, claims *auth.Claims) (*PostReport, error) {
+	if claims == nil || claims.UserId == "" {
+		return nil, errors.New("invalid authenticated user")
+	}
+
+	userId, err := uuid.Parse(claims.UserId)
+
+	if err != nil {
+		return nil, errors.New("Invalid user ID")
+	}
+
+	postId, err := uuid.Parse(req.PostId)
+
+	if err != nil {
+		return nil, errors.New("Invalid post ID")
+	}
+
+	ownerID, err := s.repo.GetPostOwnerID(ctx, postId)
+	if err != nil {
+		return nil, err
+	}
+
+	if ownerID != nil && *ownerID == userId {
+		return nil, ErrOwnPostReport
+	}
+
+	var postReport *PostReport
+	err = database.WithTransaction(ctx, func(txCtx context.Context) error {
+		var err error
+		postReport, err = s.repo.CreatePostReport(txCtx, postId, userId, req.Reason)
+		if err != nil {
+			return err
+		}
+
+		return s.repo.UpdateUserTrustScore(txCtx, *ownerID)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return postReport, nil
+
 }

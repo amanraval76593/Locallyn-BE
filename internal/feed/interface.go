@@ -6,10 +6,20 @@ import (
 	"locallyn-be/internal/post"
 )
 
+type nearbyIncident struct {
+	Incident incident.Incident
+	Score    float64
+}
+
+type rankedPost struct {
+	Post  post.Post
+	Score float64
+}
+
 type Repository interface {
-	GetNearbyIncidents(ctx context.Context, latitude float64, longitude float64, radius int) ([]incident.Incident, error)
-	GetIncidentPosts(ctx context.Context, incidentID string, limit int) ([]post.Post, error)
-	GetNearbyBroadcastPosts(ctx context.Context, latitude float64, longitude float64, radius int) ([]post.Post, error)
+	GetNearbyIncidents(ctx context.Context, latitude float64, longitude float64, radius int, cursor *incidentCursor, limit int) ([]nearbyIncident, error)
+	GetIncidentPosts(ctx context.Context, incidentID string, cursor *postCursor, limit int) ([]rankedPost, error)
+	GetNearbyBroadcastPosts(ctx context.Context, latitude float64, longitude float64, radius int, cursor *postCursor, limit int) ([]post.Post, error)
 	GetIncidentByID(ctx context.Context, incidentID string) (*incident.Incident, error)
 }
 

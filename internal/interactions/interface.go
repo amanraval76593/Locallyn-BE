@@ -13,9 +13,13 @@ type Repository interface {
 	UpdateConfirmIncidentCount(ctx context.Context, incidentId uuid.UUID) error
 	GetPostOwnerID(ctx context.Context, postId uuid.UUID) (*uuid.UUID, error)
 	CreatePostFeedback(ctx context.Context, postId uuid.UUID, userId uuid.UUID, feedbackType constants.FeedbackType) error
+	UpdatePostTrustScore(ctx context.Context, postId uuid.UUID) error
+	UpdateUserTrustScore(ctx context.Context, userId uuid.UUID) error
+	CreatePostReport(ctx context.Context, postId uuid.UUID, userId uuid.UUID, reason string) (*PostReport, error)
 }
 
 type Service interface {
 	ConfirmIncidentService(ctx context.Context, req ConfirmIncidentRequest, claims *auth.Claims) error
 	PostFeedbackService(ctx context.Context, req PostFeedbackRequest, claims *auth.Claims) error
+	PostReportService(ctx context.Context, req PostReportRequest, claims *auth.Claims) (*PostReport, error)
 }

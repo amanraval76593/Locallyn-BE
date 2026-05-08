@@ -26,3 +26,12 @@ type PostFeedbackBodyRequest struct {
 type PostFeedbackResponse struct {
 	Message string `json:"message"`
 }
+
+type PostReportRequest struct {
+	PostId string `json:"postId" binding:"required,uuid"`
+	Reason string `json:"reason" binding:"required,min=4"`
+}
+
+type PostReportResponse struct {
+	Report PostReport `json:"postReport"`
+}

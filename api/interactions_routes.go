@@ -16,6 +16,7 @@ func SetUpInteractionRoutes(router *gin.Engine) {
 	interactionRoute := router.Group("/interactions")
 	{
 		interactionRoute.POST("/confirm-incident/:incidentId", commonauth.RequireAuth(cfg.JwtSecret), interactionsHandler.ConfirmIncidentHandler)
-		interactionRoute.POST("/post-feedback/:postId", commonauth.RequireAuth(cfg.JwtSecret), interactionsHandler.PostFeedbackHandler)
+		interactionRoute.POST("/feedback/:postId", commonauth.RequireAuth(cfg.JwtSecret), interactionsHandler.PostFeedbackHandler)
+		interactionRoute.POST("/report-post", commonauth.RequireAuth(cfg.JwtSecret), interactionsHandler.ReportPost)
 	}
 }

@@ -49,7 +49,7 @@ func (s *service) FindOrCreateIncidentService(ctx context.Context, latitude floa
 	incident, err := s.repo.FindNearbyIncidentByCategory(ctx, latitude, longitude, radius, category)
 
 	if err != nil {
-		return s.CreateIncidentService(ctx, latitude, longitude, radius, category)
+		return nil, err
 	}
 
 	if incident != nil {
