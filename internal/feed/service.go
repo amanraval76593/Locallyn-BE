@@ -2,18 +2,24 @@ package feed
 
 import (
 	"context"
+	"locallyn-be/internal/common/constants"
 	"locallyn-be/internal/post"
+	"locallyn-be/pkg/elasticsearch"
 )
 
 const metersPerKilometer = 1000
 const defaultPageLimit = 20
 
 type service struct {
-	repo Repository
+	repo            Repository
+	feedSearchIndex string
 }
 
-func NewService(repo Repository) Service {
-	return &service{repo: repo}
+func NewService(repo Repository, feedSearchIndex string) Service {
+	return &service{
+		repo:            repo,
+		feedSearchIndex: feedSearchIndex,
+	}
 }
 
 func (s *service) GetFeedByLocationService(ctx context.Context, req GetFeedByLocationRequest) (*GetFeedByLocationResponse, error) {
@@ -145,6 +151,94 @@ func (s *service) GetIncidentPostsService(ctx context.Context, req GetIncidentPo
 		NextCursor: nextCursor,
 		HasMore:    hasMore,
 		Limit:      limit,
+	}, nil
+}
+
+func (s *service) SearchFeedService(ctx context.Context, req SearchFeedRequest) (*GetFeedByLocationResponse, error) {
+	radiusInMeters := req.Radius * metersPerKilometer
+	limit := normalizeLimit(req.Limit)
+
+	cursor, err := decodeSearchCursor(req.Cursor)
+	if err != nil {
+		return nil, err
+	}
+
+	hits, err := elasticsearch.SearchFeedPosts(ctx, s.feedSearchIndex, req.Keyword, req.Latitude, req.Longitude, radiusInMeters, cursor, limit+1)
+	if err != nil {
+		return nil, err
+	}
+
+	hasMore := len(hits) > limit
+	if hasMore {
+		hits = hits[:limit]
+	}
+
+	var nextCursor *string
+	if hasMore && len(hits) > 0 {
+		cursor, err := encodeCursor(hits[len(hits)-1].Cursor)
+		if err != nil {
+			return nil, err
+		}
+		nextCursor = &cursor
+	}
+
+	postIDs := make([]string, 0, len(hits))
+	scoreByPostID := make(map[string]float64, len(hits))
+	for _, hit := range hits {
+		postIDs = append(postIDs, hit.ID)
+		scoreByPostID[hit.ID] = hit.Score
+	}
+
+	posts, err := s.repo.GetPostsByIDs(ctx, postIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	broadcasts := make([]post.Post, 0)
+	incidentFeedByID := make(map[string]*IncidentFeedItem)
+	incidentOrder := make([]string, 0)
+
+	for _, postItem := range posts {
+		if postItem.PostType == constants.PostTypeBroadcast || postItem.IncidentID == nil {
+			broadcasts = append(broadcasts, postItem)
+			continue
+		}
+
+		incidentID := postItem.IncidentID.String()
+		item, ok := incidentFeedByID[incidentID]
+		if !ok {
+			incidentRecord, err := s.repo.GetIncidentByID(ctx, incidentID)
+			if err != nil {
+				return nil, err
+			}
+
+			item = &IncidentFeedItem{
+				Incident: *incidentRecord,
+				Posts:    make([]post.Post, 0),
+				Score:    scoreByPostID[postItem.ID.String()],
+			}
+			incidentFeedByID[incidentID] = item
+			incidentOrder = append(incidentOrder, incidentID)
+		}
+
+		item.Posts = append(item.Posts, postItem)
+		if score := scoreByPostID[postItem.ID.String()]; score > item.Score {
+			item.Score = score
+		}
+	}
+
+	incidents := make([]IncidentFeedItem, 0, len(incidentOrder))
+	for _, incidentID := range incidentOrder {
+		incidents = append(incidents, *incidentFeedByID[incidentID])
+	}
+
+	return &GetFeedByLocationResponse{
+		Incidents:         incidents,
+		Broadcasts:        broadcasts,
+		NextCursor:        nextCursor,
+		HasMoreIncidents:  hasMore,
+		HasMoreBroadcasts: hasMore,
+		Limit:             limit,
 	}, nil
 }
 

@@ -92,3 +92,38 @@ func (h *Handler) GetIncidentPostsHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *Handler) SearchFeedHandler(c *gin.Context) {
+	var req SearchFeedRequest
+
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if _, err := auth.GetClaimsFromContext(c.Request.Context()); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	response, err := h.service.SearchFeedService(c.Request.Context(), req)
+	if err != nil {
+		if errors.Is(err, ErrInvalidCursor) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}

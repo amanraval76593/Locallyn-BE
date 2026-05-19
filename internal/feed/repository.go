@@ -370,3 +370,79 @@ func (r *repository) GetIncidentByID(ctx context.Context, incidentID string) (*i
 
 	return &item, nil
 }
+
+func (r *repository) GetPostsByIDs(ctx context.Context, postIDs []string) ([]post.Post, error) {
+	if len(postIDs) == 0 {
+		return []post.Post{}, nil
+	}
+
+	query := `
+		SELECT
+			id,
+			user_id,
+			incident_id,
+			content,
+			ST_AsText(location) as location,
+			radius,
+			identity_type,
+			post_type,
+			trust_score,
+			media_urls,
+			created_at,
+			expires_at,
+			is_deleted,
+			is_flagged
+		FROM posts
+		WHERE id::text = ANY($1::text[])
+	`
+
+	rows, err := database.Conn(ctx).Query(ctx, query, postIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	posts := make([]post.Post, 0)
+	for rows.Next() {
+		var item post.Post
+
+		if err := rows.Scan(
+			&item.ID,
+			&item.UserID,
+			&item.IncidentID,
+			&item.Content,
+			&item.Location,
+			&item.Radius,
+			&item.IdentityType,
+			&item.PostType,
+			&item.TrustScore,
+			&item.MediaURLs,
+			&item.CreatedAt,
+			&item.ExpiresAt,
+			&item.IsDeleted,
+			&item.IsFlagged,
+		); err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	postByID := make(map[string]post.Post, len(posts))
+	for _, item := range posts {
+		postByID[item.ID.String()] = item
+	}
+
+	orderedPosts := make([]post.Post, 0, len(posts))
+	for _, postID := range postIDs {
+		if item, ok := postByID[postID]; ok {
+			orderedPosts = append(orderedPosts, item)
+		}
+	}
+
+	return orderedPosts, nil
+}

@@ -4,6 +4,7 @@ import (
 	"locallyn-be/api"
 	"locallyn-be/config"
 	"locallyn-be/pkg/database"
+	"locallyn-be/pkg/elasticsearch"
 	"locallyn-be/pkg/redisConfig"
 	"log"
 
@@ -16,6 +17,9 @@ func main() {
 	database.InitPostgres(cfg.PostgresURL)
 
 	redisConfig.InitRedis(cfg.RedisAddr)
+
+	elasticsearch.InitElasticsearch(cfg.ElasticsearchURL)
+	elasticsearch.BootstrapFeedPostsIndex(cfg.FeedSearchIndex)
 
 	router := gin.Default()
 
