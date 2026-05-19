@@ -21,9 +21,11 @@ type Repository interface {
 	GetIncidentPosts(ctx context.Context, incidentID string, cursor *postCursor, limit int) ([]rankedPost, error)
 	GetNearbyBroadcastPosts(ctx context.Context, latitude float64, longitude float64, radius int, cursor *postCursor, limit int) ([]post.Post, error)
 	GetIncidentByID(ctx context.Context, incidentID string) (*incident.Incident, error)
+	GetPostsByIDs(ctx context.Context, postIDs []string) ([]post.Post, error)
 }
 
 type Service interface {
 	GetFeedByLocationService(ctx context.Context, req GetFeedByLocationRequest) (*GetFeedByLocationResponse, error)
 	GetIncidentPostsService(ctx context.Context, req GetIncidentPostsRequest) (*GetIncidentPostsResponse, error)
+	SearchFeedService(ctx context.Context, req SearchFeedRequest) (*GetFeedByLocationResponse, error)
 }

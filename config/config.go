@@ -11,6 +11,8 @@ import (
 type Config struct {
 	PostgresURL       string
 	RedisAddr         string
+	ElasticsearchURL  string
+	FeedSearchIndex   string
 	Port              string
 	JwtSecret         string
 	AccessTokenExpiry int
@@ -26,6 +28,8 @@ func LoadConfig() *Config {
 	return &Config{
 		PostgresURL:       getEnv("POSTGRES_URL", "postgres://postgres:postgres@localhost:5432/locallyn"),
 		RedisAddr:         getEnv("REDIS_ADDR", "localhost:6379"),
+		ElasticsearchURL:  getEnv("ELASTICSEARCH_URL", "http://localhost:9200"),
+		FeedSearchIndex:   getEnv("FEED_SEARCH_INDEX", "feed_posts_v1"),
 		Port:              getEnv("PORT", "8080"),
 		JwtSecret:         getEnv("JWT_SECRET", ""),
 		AccessTokenExpiry: expiry,

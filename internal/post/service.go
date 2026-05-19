@@ -8,6 +8,8 @@ import (
 	"locallyn-be/internal/common/constants"
 	"locallyn-be/internal/incident"
 	"locallyn-be/pkg/database"
+	"locallyn-be/pkg/elasticsearch"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -15,12 +17,14 @@ import (
 type service struct {
 	repo            Repository
 	incidentService incident.Service
+	feedSearchIndex string
 }
 
-func NewService(repo Repository, incidentService incident.Service) Service {
+func NewService(repo Repository, incidentService incident.Service, feedSearchIndex string) Service {
 	return &service{
 		repo:            repo,
 		incidentService: incidentService,
+		feedSearchIndex: feedSearchIndex,
 	}
 }
 
@@ -37,10 +41,11 @@ func (s *service) CreatePostService(ctx context.Context, claims *auth.Claims, re
 
 	var newPost *Post
 	var incidentID *uuid.UUID
+	var incidentRecord *incident.Incident
 
 	err = database.WithTransaction(ctx, func(txCtx context.Context) error {
 		if req.Type == constants.PostTypeIncident {
-			incidentRecord, err := s.incidentService.FindOrCreateIncidentService(
+			record, err := s.incidentService.FindOrCreateIncidentService(
 				txCtx,
 				req.Latitude,
 				req.Longitude,
@@ -51,7 +56,8 @@ func (s *service) CreatePostService(ctx context.Context, claims *auth.Claims, re
 				return err
 			}
 
-			incidentID = &incidentRecord.ID
+			incidentRecord = record
+			incidentID = &record.ID
 		}
 
 		post := &Post{
@@ -69,8 +75,7 @@ func (s *service) CreatePostService(ctx context.Context, claims *auth.Claims, re
 		if err != nil {
 			return err
 		}
-		postId := createdPost.ID.String()
-		fmt.Println(postId)
+
 		if incidentID != nil {
 			if err := s.repo.UpdateIncidentPostCount(txCtx, incidentID); err != nil {
 				return err
@@ -86,6 +91,18 @@ func (s *service) CreatePostService(ctx context.Context, claims *auth.Claims, re
 		return nil
 	})
 	if err != nil {
+		return nil, err
+	}
+
+	indexCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	doc, err := buildFeedPostDocument(*newPost, incidentRecord)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := elasticsearch.IndexFeedPost(indexCtx, s.feedSearchIndex, doc); err != nil {
 		return nil, err
 	}
 

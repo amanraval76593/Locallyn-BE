@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"locallyn-be/pkg/elasticsearch"
 	"time"
 )
 
@@ -58,6 +59,23 @@ func decodeIncidentCursor(cursor string) (*incidentCursor, error) {
 	}
 
 	if value.CreatedAt.IsZero() || value.ID == "" {
+		return nil, ErrInvalidCursor
+	}
+
+	return &value, nil
+}
+
+func decodeSearchCursor(cursor string) (*elasticsearch.FeedPostSearchCursor, error) {
+	if cursor == "" {
+		return nil, nil
+	}
+
+	var value elasticsearch.FeedPostSearchCursor
+	if err := decodeCursor(cursor, &value); err != nil {
+		return nil, err
+	}
+
+	if value.CreatedAt == "" || value.ID == "" {
 		return nil, ErrInvalidCursor
 	}
 

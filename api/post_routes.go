@@ -14,7 +14,7 @@ func setUpPostRoutes(router *gin.Engine) {
 	postRepo := post.NewRepository()
 	incidentRepo := incident.NewRepository()
 	incidentService := incident.NewService(incidentRepo)
-	postService := post.NewService(postRepo, incidentService)
+	postService := post.NewService(postRepo, incidentService, cfg.FeedSearchIndex)
 	postHandler := post.NewHandler(postService)
 
 	postRouter := router.Group("/post")
