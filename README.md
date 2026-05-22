@@ -187,18 +187,18 @@ This starts:
 - Redis on host port `6381`
 - Elasticsearch on host port `9200`
 
-### Environment variables
+### Environment example
 
-Create a `.env` file:
+Create a local `.env` file using this shape:
 
 ```env
-PORT=8080
-POSTGRES_URL=postgres://postgres:postgres@localhost:5434/locallyn
-REDIS_ADDR=localhost:6381
-ELASTICSEARCH_URL=http://localhost:9200
-FEED_SEARCH_INDEX=feed_posts_v1
-JWT_SECRET=replace-with-a-secure-secret
-ACCESS_TOKEN_EXPIRY=60
+PORT=<server-port>
+POSTGRES_URL=<postgres-connection-url>
+REDIS_ADDR=<redis-host-and-port>
+ELASTICSEARCH_URL=<elasticsearch-url>
+FEED_SEARCH_INDEX=<feed-index-name>
+JWT_SECRET=<jwt-signing-secret>
+ACCESS_TOKEN_EXPIRY=<access-token-expiry-in-minutes>
 ```
 
 ### Run the server
